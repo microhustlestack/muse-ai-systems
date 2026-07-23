@@ -1,0 +1,96 @@
+{
+  "name": "MUSE100 Loop (orchestration)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "muse100-intake",
+        "options": {}
+      },
+      "name": "Webhook: New Prospect",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "id": "a1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:3000/intake",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { name: $json.body.name, email: $json.body.email, tier: $json.body.tier, source: $json.body.source } }}",
+        "options": {}
+      },
+      "name": "Call /intake",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [480, 300],
+      "id": "a2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:3000/pledge",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { memberId: $json.body.id, cycleIndex: 0, pledged: 1000, due_date: '2026-12-31' } }}",
+        "options": {}
+      },
+      "name": "Call /pledge",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [710, 300],
+      "id": "a3"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "days", "interval": 1 }
+          ]
+        },
+        "triggerTimes": {}
+      },
+      "name": "Daily: Impact Snapshot",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 540],
+      "id": "a4"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/impact",
+        "options": {}
+      },
+      "name": "Call /impact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [480, 540],
+      "id": "a5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "b1", "name": "summary", "type": "string", "value": "={{ $json.body }}" }
+          ]
+        }
+      },
+      "name": "Log Impact",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [710, 540],
+      "id": "a6"
+    }
+  ],
+  "connections": {
+    "Webhook: New Prospect": { "main": [ [ { "node": "Call /intake", "type": "main", "index": 0 } ] ] },
+    "Call /intake": { "main": [ [ { "node": "Call /pledge", "type": "main", "index": 0 } ] ] },
+    "Daily: Impact Snapshot": { "main": [ [ { "node": "Call /impact", "type": "main", "index": 0 } ] ] },
+    "Call /impact": { "main": [ [ { "node": "Log Impact", "type": "main", "index": 0 } ] ] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "versionId": "muse100-loop-v2"
+}

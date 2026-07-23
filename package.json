@@ -1,0 +1,22 @@
+{
+  "name": "muse100",
+  "version": "1.0.0",
+  "description": "MUSE100 giving-circle automation loop - dependency-free, Node 22 stdlib only",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "demo": "node demo.js",
+    "server": "node src/server.js",
+    "test": "node test.js"
+  },
+  "license": "MIT",
+  "keywords": [
+    "giving-circle",
+    "nonprofit",
+    "automation"
+  ],
+  "author": "",
+  "dependencies": {}
+}
