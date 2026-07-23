@@ -74,21 +74,22 @@ The same codebase runs both modes—no code changes needed.
 
 ## Data Model
 
-**Members** (`members` table)
-- `id`: `M100-001` format
-- `status`: `prospect` | `founding` | `active` | `lapsed`
-- `status_vocab`: exact vocabulary match for status
-- `tier`: `founding` | `standard`
-- `cycle`: current cycle (1-based)
+| **Members** (`members` table) |
+| `id`: `M100-001` format |
+| `status`: `prospect` \| `founding` \| `active` \| `lapsed` |
+| `tier`: `Founding Cabinet` \| `Member` |
+| `source`: recruitment tag (e.g. `cabinet`, `referral`, `direct`) |
+| `join_date`: `YYYY-MM-DD` |
 
 **Pledges** (`pledges` table)
-- `id`: `PLD-M100-001-1`
-- `status`: `pending` | `paid` | `overdue` | `waived`
-- `cycle_index`: annual cycle number
+| `id`: `PLD-M100-001-0` (`PLD-` + memberId + `-` + cycleIndex) |
+| `status`: `pending` \| `paid` \| `overdue` \| `waived` |
+| `cycle_index`: 0-based annual cycle number (0 = first year) |
+| `pledged` / `paid_ytd`: USD integers |
 
 **Payments** (`payments` table)
-- Links to pledge + member
-- `status`: `pending` | `succeeded` | `failed`
+| Links to pledge + member |
+| `status`: `pending` \| `succeeded` \| `failed` |
 
 ## Single-Cycle Model
 
@@ -123,9 +124,24 @@ Tests verify:
 - Stripe signature verification (valid, missing, invalid)
 - Email personalization
 
+## Orchestration (n8n)
+
+A ready-to-import workflow is provided: `muse100-loop.workflow.json`.
+It wires: `Webhook: New Prospect` → `POST /intake` → `POST /pledge`, plus a
+`Daily: Impact Snapshot` → `GET /impact` → log.
+
+**Import note:** n8n's REST import requires an owner API key
+(`X-N8N-API-KEY` header). This build ran n8n with owner setup disabled,
+so the workflow was **validated by exercising the same HTTP endpoints the
+workflow calls** (verified end-to-end against `src/server.js`), not auto-imported.
+To import: enable an n8n owner account, generate an API key, then
+`POST /api/v1/workflows` with the JSON, or paste it via Settings → Workflows.
+
 ## No PII / Generic Pattern
 
-This codebase contains **no real PII**. All data is synthetic (M100-001, member1@muse100.org, etc.). The pattern is generic and reusable for any giving circle.
+This codebase contains **no real PII**. All data is synthetic
+(`M100-001`, `member1@muse100.org`, etc.). The pattern is generic and reusable
+for any giving circle. Keep real member data in the private vault, not this repo.
 
 ## License
 
